@@ -152,7 +152,7 @@ generate_spec()
         change_log=$(cat ${PRODUCT_DIR}/changelog);
         change_log="* ${date} ${BUILDER_NAME} ${BUILDER_EMAIL}\n- ${version}-${revision} spec created" . ${change_log};
     fi
-
+    SPEC_FILE=${product}.spec.in
     if [ -f "${BUILD_SPECS}/${PRODUCT_WITH_VER}.spec" ]; then
         echoY 'Found existing spec file, delete it and create new one'
         rm -f ${BUILD_SPECS}/${PRODUCT_WITH_VER}.spec
