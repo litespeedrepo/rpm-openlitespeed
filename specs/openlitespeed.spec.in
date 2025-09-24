@@ -228,6 +228,25 @@ fi
 
 /usr/local/lsws/admin/misc/rc-inst.sh > /dev/null 2>&1
 
+if [ "$1" -eq 1 ]; then
+  LSWS_HOME="/usr/local/lsws"
+  PASSFILE="$LSWS_HOME/adminpasswd"
+  HTPASSWD="$LSWS_HOME/admin/conf/htpasswd"
+
+  if [ ! -f "$PASSFILE" ]; then
+    ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+    ENCRYPT_PASS=$("$LSWS_HOME/admin/fcgi-bin/admin_php" -q "$LSWS_HOME/admin/misc/htpasswd.php" "$ADMIN_PASS")
+    if grep -q '^admin:' "$HTPASSWD" 2>/dev/null; then
+      sed -i "s|^admin:.*|admin:${ENCRYPT_PASS}|" "$HTPASSWD"
+    else
+      echo "admin:${ENCRYPT_PASS}" >> "$HTPASSWD"
+    fi
+    chmod 600 "$HTPASSWD"
+    echo "WebAdmin user/password is admin/$ADMIN_PASS" > "$PASSFILE"
+    chmod 600 "$PASSFILE"
+    echo "WebAdmin user/password is admin/$ADMIN_PASS"
+  fi
+fi
 
 %preun
 if [ $1 = 0 ]; then
