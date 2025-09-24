@@ -89,18 +89,15 @@ set_paras()
     echo "The following platforms are specified: ${platforms}"
 
     if [ -z "${revision}" ]; then
-        echo ${product} | grep '-' >/dev/null
-        if [ $? = 0 ]; then
-            urls=(
-                "https://${prod_server}/centos/${EPEL_TAG}/${archs}/RPMS/"
-                "https://${prod_server}/centos/${EPEL_TAG}/update/${archs}/RPMS/"
-            )
-            revision=$(for url in "${urls[@]}"; do
-                curl -isk "$url" | \
-                grep "${product}-${version}" | \
-                sed -nE "s/.*${product}-${version}-([0-9]+)\.el.*/\1/p"
-            done | sort -nr | head -n1)
-        fi
+        urls=(
+            "https://${prod_server}/centos/${EPEL_TAG}/${archs}/RPMS/"
+            "https://${prod_server}/centos/${EPEL_TAG}/update/${archs}/RPMS/"
+        )
+        revision=$(for url in "${urls[@]}"; do
+            curl -isk "$url" | \
+            grep "${product}-${version}" | \
+            sed -nE "s/.*${product}-${version}-([0-9]+)\.el.*/\1/p"
+        done | sort -nr | head -n1)
         if [[ ${revision} == ?(-)+([[:digit:]]) ]]; then
             revision=$((revision+1))
         else
