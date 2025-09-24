@@ -26,6 +26,10 @@ BuildRequires: libxcrypt-compat
 BuildRequires: rcs
 %endif
 
+%if 0%{?rhel} >= 9
+Requires: libxcrypt-compat
+%endif
+
 Requires: openssl
 %if 0%{?rhel} >= 8
 Requires: libnsl
