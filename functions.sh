@@ -90,10 +90,16 @@ set_paras()
 
     if [ -z "${revision}" ]; then
         echo ${product} | grep '-' >/dev/null
-        if [ $? = 0 ]; then 
-            revision=$(curl -isk https://${prod_server}/centos/${EPEL_TAG}/${archs}/RPMS/ | grep ${product}-${version} | \
-            sed -nE "s/.*${product}-${version}-([0-9]+)\.el.*/\1/p" | \
-            sort -nr | head -n1)
+        if [ $? = 0 ]; then
+            urls=(
+                "https://${prod_server}/centos/${EPEL_TAG}/${archs}/RPMS/"
+                "https://${prod_server}/centos/${EPEL_TAG}/update/${archs}/RPMS/"
+            )
+            revision=$(for url in "${urls[@]}"; do
+                curl -isk "$url" | \
+                grep "${product}-${version}" | \
+                sed -nE "s/.*${product}-${version}-([0-9]+)\.el.*/\1/p"
+            done | sort -nr | head -n1)
         fi
         if [[ ${revision} == ?(-)+([[:digit:]]) ]]; then
             revision=$((revision+1))

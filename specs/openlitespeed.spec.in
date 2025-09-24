@@ -17,7 +17,7 @@ BuildRequires: wget
 BuildRequires: libnsl
 %endif
 
-%if 0%{?rhel} >= 9
+%if 0%{?rhel} >= 9 || 0%{?centos} >= 9
 BuildRequires: libxcrypt-compat
 %endif
 
@@ -218,8 +218,8 @@ EOF
 
 if [[ ! -f /usr/local/lsws/admin/conf/webadmin.crt ]]; then
   openssl req -x509 -config $csr -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout %{sslkey} -out %{sslcert}
-chown lsadm.lsadm %{sslcert}; chmod 400 %{sslcert};
-chown lsadm.lsadm %{sslkey}; chmod 400 %{sslkey};
+chown lsadm:lsadm %{sslcert}; chmod 400 %{sslcert};
+chown lsadm:lsadm %{sslkey}; chmod 400 %{sslkey};
 fi
 
 /usr/local/lsws/admin/misc/rc-inst.sh > /dev/null 2>&1
