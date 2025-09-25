@@ -11,8 +11,8 @@ platforms=$2
 input_archs=$3
 lsapiver="8.3"
 PUSH_FLAG='OFF'
-version=
-revision=
+#version=
+#revision=
 
 source ./functions.sh #2>/dev/null
 if [ $(id -u) != "0" ]; then
