@@ -147,7 +147,7 @@ generate_spec()
 {
     echoB "${FPACE} - Generate spec"
     date=$(date +"%a %b %d %Y")
-    echoG "BUILD_DIR is: ${BUILD_DIR}"
+    echoG "${EPACE}BUILD_DIR is: ${BUILD_DIR}"
  
     if [ ! -f "${PRODUCT_DIR}/changelog" ]; then
         change_log="* ${date} ${BUILDER_NAME} ${BUILDER_EMAIL}\n- Initial spec creation for ${product} rpm";
