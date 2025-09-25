@@ -82,6 +82,7 @@ sed -i -e 's:ln -sf "$LSWS_HOME/fcgi-bin/lsphp5" "$LSWS_HOME/fcgi-bin/lsphp":cd 
 sed -i -e 's:mkdir $SERVERROOT:mkdir -p $SERVERROOT:g' openlitespeed/install.sh
 sed -i -e 's|s:%LSWS_CTRL%:$LSWS_HOME/bin/lswsctrl:|s:%LSWS_CTRL%:/usr/local/lsws/bin/lswsctrl:|g' openlitespeed/functions.sh
 ./openlitespeed/install.sh %{buildroot}/usr/local/lsws
+rm -f %{buildroot}/usr/local/lsws/adminpasswd %{buildroot}/usr/local/lsws/admin/conf/htpasswd
 %ifnarch aarch64
 %endif
 rm -f %{buildroot}/usr/local/lsws/admin/conf/admin_config.conf
@@ -155,21 +156,21 @@ if [ $? -eq 0 ]; then
 fi
 SDIR_OWN="root:root"
 chown $SDIR_OWN $LSWS_HOME >/dev/null 2>&1
-chown "$CONF_OWN" -R /usr/local/lsws/conf >/dev/null 2>&1
-chown "$CONF_OWN" -R /usr/local/lsws/phpbuild >/dev/null 2>&1
-if [ -d "/usr/local/lsws/autoupdate" ]; then
-  chown "$CONF_OWN" -R /usr/local/lsws/autoupdate >/dev/null 2>&1
+chown "$CONF_OWN" -R $LSWS_HOME/conf >/dev/null 2>&1
+chown "$CONF_OWN" -R $LSWS_HOME/phpbuild >/dev/null 2>&1
+if [ -d "$LSWS_HOME/autoupdate" ]; then
+  chown "$CONF_OWN" -R $LSWS_HOME/autoupdate >/dev/null 2>&1
 fi
-if [ -d "/usr/local/lsws/DEFAULT/conf" ]; then
-  chown "$CONF_OWN" -R /usr/local/lsws/DEFAULT/conf >/dev/null 2>&1
+if [ -d "$LSWS_HOME/DEFAULT/conf" ]; then
+  chown "$CONF_OWN" -R $LSWS_HOME/DEFAULT/conf >/dev/null 2>&1
 fi
-if [ -d "/usr/local/lsws/Example/conf" ]; then
-  chown "$CONF_OWN" -R /usr/local/lsws/Example/conf >/dev/null 2>&1
+if [ -d "$LSWS_HOME/Example/conf" ]; then
+  chown "$CONF_OWN" -R $LSWS_HOME/Example/conf >/dev/null 2>&1
 fi
-chown "$CONF_OWN" -R /usr/local/lsws/admin/conf >/dev/null 2>&1
-chown "$CONF_OWN" -R /usr/local/lsws/admin/tmp >/dev/null 2>&1
-chgrp $WS_GROUP /usr/local/lsws/admin/cgid >/dev/null 2>&1
-chgrp $WS_GROUP /usr/local/lsws/admin/tmp >/dev/null 2>&1
+chown "$CONF_OWN" -R $LSWS_HOME/admin/conf >/dev/null 2>&1
+chown "$CONF_OWN" -R $LSWS_HOME/admin/tmp >/dev/null 2>&1
+chgrp $WS_GROUP $LSWS_HOME/admin/cgid >/dev/null 2>&1
+chgrp $WS_GROUP $LSWS_HOME/admin/tmp >/dev/null 2>&1
 chown  "$CONF_OWN" $LSWS_HOME/admin/tmp/sess_* 1>/dev/null 2>&1
 chown  "$DIR_OWN" $LSWS_HOME/cachedata >/dev/null 2>&1
 chown "$SDIR_OWN" "$LSWS_HOME/fcgi-bin/lsphp" >/dev/null 2>&1
@@ -198,8 +199,8 @@ csr="${SSL_HOSTNAME}.csr"
 key="${SSL_HOSTNAME}.key"
 cert="${SSL_HOSTNAME}.crt"
     
-%define sslcert /usr/local/lsws/admin/conf/${cert}
-%define sslkey /usr/local/lsws/admin/conf/${key}
+%define sslcert $LSWS_HOME/admin/conf/${cert}
+%define sslkey $LSWS_HOME/admin/conf/${key}
     
 cat << EOF > ${csr}
 [req]
@@ -220,20 +221,20 @@ dnQualifier = openlitespeed
 extendedKeyUsage=1.3.6.1.5.5.7.3.1
 EOF
 
-if [[ ! -f /usr/local/lsws/admin/conf/webadmin.crt ]]; then
+if [[ ! -f $LSWS_HOME/admin/conf/webadmin.crt ]]; then
   openssl req -x509 -config $csr -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout %{sslkey} -out %{sslcert}
 chown lsadm:lsadm %{sslcert}; chmod 400 %{sslcert};
 chown lsadm:lsadm %{sslkey}; chmod 400 %{sslkey};
 fi
 
-/usr/local/lsws/admin/misc/rc-inst.sh > /dev/null 2>&1
+$LSWS_HOME/admin/misc/rc-inst.sh > /dev/null 2>&1
 
 if [ "$1" -eq 1 ]; then
   LSWS_HOME="/usr/local/lsws"
   PASSFILE="$LSWS_HOME/adminpasswd"
   HTPASSWD="$LSWS_HOME/admin/conf/htpasswd"
 
-  if [ ! -f "$PASSFILE" ]; then
+  if [ ! -f "$PASSFILE" ] || [ ! -f "$HTPASSWD" ]; then
     ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
     ENCRYPT_PASS=$("$LSWS_HOME/admin/fcgi-bin/admin_php" -q "$LSWS_HOME/admin/misc/htpasswd.php" "$ADMIN_PASS")
     if grep -q '^admin:' "$HTPASSWD" 2>/dev/null; then
@@ -242,6 +243,7 @@ if [ "$1" -eq 1 ]; then
       echo "admin:${ENCRYPT_PASS}" >> "$HTPASSWD"
     fi
     chmod 600 "$HTPASSWD"
+    chown lsadm:lsadm "$HTPASSWD"
     echo "WebAdmin user/password is admin/$ADMIN_PASS" > "$PASSFILE"
     chmod 600 "$PASSFILE"
     echo "WebAdmin user/password is admin/$ADMIN_PASS"
@@ -300,6 +302,6 @@ fi
 %attr(-,root,root) /usr/local/lsws/modules/mod_security.so
 
 %changelog
-* Mon Dec 24 2018 lsadm <info@litespeedtech.com>
+* Mon Dec 24 2018 litespeed <info@litespeedtech.com>
 - Create new spec for OLS
 
