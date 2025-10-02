@@ -264,17 +264,9 @@ fi
 
 %posttrans
 if [[ -e /etc/systemd/system ]] || [[ -e /usr/lib/systemd/system ]] || [[ -e /lib/systemd/system ]] ; then
-  if [ "$1" -eq 1 ]; then
-    systemctl start lsws > /dev/null 2>&1
-  else
-    systemctl condrestart lsws > /dev/null 2>&1
-  fi
+    systemctl restart lsws > /dev/null 2>&1
 else
-  if [ "$1" -eq 1 ]; then
     service lsws restart >/dev/null 2>&1 || :
-  else
-    service lsws condrestart >/dev/null 2>&1 || :
-  fi
 fi
 
 %files
