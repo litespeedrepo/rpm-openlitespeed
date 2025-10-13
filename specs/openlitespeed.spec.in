@@ -81,8 +81,12 @@ sed -i -e 's:OPENLSWS_ADMINSSL=yes:OPENLSWS_ADMINSSL=no:g' openlitespeed/install
 sed -i -e 's:ln -sf "$LSWS_HOME/fcgi-bin/lsphp5" "$LSWS_HOME/fcgi-bin/lsphp":cd $LSWS_HOME/fcgi-bin/; ln -sf lsphp5 ./lsphp; cd -:g' openlitespeed/_in.sh
 sed -i -e 's:mkdir $SERVERROOT:mkdir -p $SERVERROOT:g' openlitespeed/install.sh
 sed -i -e 's|s:%LSWS_CTRL%:$LSWS_HOME/bin/lswsctrl:|s:%LSWS_CTRL%:/usr/local/lsws/bin/lswsctrl:|g' openlitespeed/functions.sh
+mkdir -p %{buildroot}/usr/local/lsws/admin/conf/
+touch %{buildroot}/usr/local/lsws/adminpasswd
+touch %{buildroot}/usr/local/lsws/admin/conf/htpasswd	
 ./openlitespeed/install.sh %{buildroot}/usr/local/lsws
-rm -f %{buildroot}/usr/local/lsws/adminpasswd %{buildroot}/usr/local/lsws/admin/conf/htpasswd
+#rm -f %{buildroot}/usr/local/lsws/adminpasswd %{buildroot}/usr/local/lsws/admin/conf/htpasswd
+
 %ifnarch aarch64
 %endif
 rm -f %{buildroot}/usr/local/lsws/admin/conf/admin_config.conf
@@ -229,25 +233,23 @@ fi
 
 $LSWS_HOME/admin/misc/rc-inst.sh > /dev/null 2>&1
 
-if [ "$1" -eq 1 ]; then
-  LSWS_HOME="/usr/local/lsws"
-  PASSFILE="$LSWS_HOME/adminpasswd"
-  HTPASSWD="$LSWS_HOME/admin/conf/htpasswd"
+LSWS_HOME="/usr/local/lsws"
+PASSFILE="$LSWS_HOME/adminpasswd"
+HTPASSWD="$LSWS_HOME/admin/conf/htpasswd"
 
-  if [ ! -f "$PASSFILE" ] || [ ! -f "$HTPASSWD" ]; then
-    ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
-    ENCRYPT_PASS=$("$LSWS_HOME/admin/fcgi-bin/admin_php" -q "$LSWS_HOME/admin/misc/htpasswd.php" "$ADMIN_PASS")
-    if grep -q '^admin:' "$HTPASSWD" 2>/dev/null; then
-      sed -i "s|^admin:.*|admin:${ENCRYPT_PASS}|" "$HTPASSWD"
-    else
-      echo "admin:${ENCRYPT_PASS}" >> "$HTPASSWD"
-    fi
-    chmod 600 "$HTPASSWD"
-    chown lsadm:lsadm "$HTPASSWD"
-    echo "WebAdmin user/password is admin/$ADMIN_PASS" > "$PASSFILE"
-    chmod 600 "$PASSFILE"
-    echo "WebAdmin user/password is admin/$ADMIN_PASS"
+if [ ! -f "$PASSFILE" ] || [ ! -f "$HTPASSWD" ] || [ ! -s "$HTPASSWD" ]; then
+  ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+  ENCRYPT_PASS=$("$LSWS_HOME/admin/fcgi-bin/admin_php" -q "$LSWS_HOME/admin/misc/htpasswd.php" "$ADMIN_PASS")
+  if grep -q '^admin:' "$HTPASSWD" 2>/dev/null; then
+    sed -i "s|^admin:.*|admin:${ENCRYPT_PASS}|" "$HTPASSWD"
+  else
+    echo "admin:${ENCRYPT_PASS}" >> "$HTPASSWD"
   fi
+  chmod 600 "$HTPASSWD"
+  chown lsadm:lsadm "$HTPASSWD"
+  echo "WebAdmin user/password is admin/$ADMIN_PASS" > "$PASSFILE"
+  chmod 600 "$PASSFILE"
+  echo "WebAdmin user/password is admin/$ADMIN_PASS"
 fi
 
 %preun
@@ -272,13 +274,15 @@ fi
 %files
 %defattr(-,root,root,-)
 /etc/init.d/lsws
-%dir /usr/local/lsws
-/usr/local/lsws/*
+%config(noreplace) /usr/local/lsws/adminpasswd
+%config(noreplace) /usr/local/lsws/admin/conf/htpasswd
 %config(noreplace) /usr/local/lsws/conf/*
 %config(noreplace) /usr/local/lsws/admin/conf/*
 %config(noreplace) /usr/local/lsws/fcgi-bin/*
 %config(noreplace) /usr/local/lsws/PLAT
 %config(noreplace) /usr/local/lsws/Example/html/*
+%dir /usr/local/lsws
+/usr/local/lsws/*
 
 %doc
 
