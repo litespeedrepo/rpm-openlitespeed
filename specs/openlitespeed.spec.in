@@ -21,6 +21,7 @@ BuildRequires: libnsl
 BuildRequires: libxcrypt-compat
 %endif
 
+%global __brp_check_rpaths %{nil}
 
 %if 0%{?rhel} < 8
 BuildRequires: rcs
