@@ -63,7 +63,7 @@ Mod Security for openlitespeed webserver.
 
 %prep
 %ifarch aarch64
-wget -q https://openlitespeed.org/preuse/openlitespeed-%{version}-aarch64-linux.tgz
+wget -q https://openlitespeed.org/packages/openlitespeed-%{version}-aarch64-linux.tgz
 tar -xzf openlitespeed-%{version}-aarch64-linux.tgz
 %else
 wget -q https://openlitespeed.org/packages/openlitespeed-%{version}.tgz
