@@ -40,7 +40,8 @@ Requires: libnsl
 Requires: rcs
 %endif
 
-Requires: lsphp83 lsphp83-common lsphp83-gd lsphp83-process lsphp83-mbstring lsphp83-mysqlnd lsphp83-xml lsphp83-pdo lsphp83-imap lsphp83-json lsphp83-opcache
+Requires: lsphp83 lsphp83-common lsphp83-gd lsphp83-process lsphp83-mysqlnd lsphp83-xml lsphp83-pdo lsphp83-json lsphp83-opcache
+Recommends: lsphp83-mbstring lsphp83-imap
 
 %description
 OpenLiteSpeed is a high-performance, lightweight, open source HTTP server developed and copyrighted by LiteSpeed Technologies. Users are free to download, use, distribute, and modify OpenLiteSpeed and its source code in accordance with the precepts of the GPLv3 license.
